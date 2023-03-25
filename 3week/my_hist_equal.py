@@ -10,7 +10,14 @@ def my_calcHist(src):
     # hist : src의 히스토그램      #
     ###############################
 
-    hist = ???
+    # hist = ???
+    hist = [0] * 256
+    h, w = src.shape
+
+    for row in range(h):
+        for col in range(w):
+            intensity = src[row, col]
+            hist[intensity] += 1
 
     return hist
 
@@ -23,7 +30,11 @@ def my_normalize_hist(hist, pixel_num):
     # normalized_hist : 히스토그램값을 총 픽셀수로 나눔      #
     ########################################################
 
-    normalized_hist = ???
+    # normalized_hist = ???
+    normalized_hist = np.zeros(len(hist))
+    for i in range(len(normalized_hist)):
+        normalized_hist[i] = hist[i] / pixel_num
+
     return normalized_hist
 
 
@@ -36,7 +47,11 @@ def my_PDF2CDF(pdf):
     ########################################################
 
     cdf = np.zeros(pdf.shape)
-    cdf = ???
+    # cdf = ???
+    cdf[0] = pdf[0]
+    for i in range(1, len(cdf)):
+        cdf[i] = pdf[i] + cdf[i - 1]
+
     return cdf
 
 
@@ -49,7 +64,8 @@ def my_denormalize(normalized, gray_level):
     # denormalized : normalized와 gray_level을 곱함        #
     ########################################################
 
-    denormalized = ???
+    # denormalized = ???
+    denormalized = normalized * gray_level
     return denormalized
 
 
@@ -62,7 +78,11 @@ def my_calcHist_equalization(denormalized, hist):
     # hist_equal : equalization된 히스토그램                           #
     ####################################################################
 
-    hist_equal = ???
+    # hist_equal = ???
+    hist_equal = np.zeros(256, dtype=np.uint8)
+
+    for i in range(len(hist_equal)):
+        hist_equal[denormalized[i]] += hist[i]
 
     return hist_equal
 
@@ -76,12 +96,17 @@ def my_equal_img(src, output_gray_level):
     # dst : equalization된 결과 이미지                                 #
     ####################################################################
 
-    (h,w) = src.shape
-    dst = np.zeros((h,w),dtype=np.uint8)
+    (h, w) = src.shape
+    dst = np.zeros((h, w), dtype=np.uint8)
+
+    # for row in range(h):
+    #     for col in range(w):
+    #         dst[row, col] = ???
+    # return dst
 
     for row in range(h):
         for col in range(w):
-            dst[row,col] = ???
+            dst[row, col] = output_gray_level[src[row, col]]
     return dst
 
 
@@ -115,7 +140,9 @@ def my_hist_equal(src, type='original'):
     # y축 : 0 ~ 255 각각의 정수 값에 해당하는 equalization 변환 픽셀 값
     ###################################################################
 
-    plt.plot(???, ???)
+    # plt.plot(???, ???)
+
+    plt.plot(np.arange(256), output_gray_level)
     plt.title(type + ' mapping function')
     plt.xlabel('input intensity')
     plt.ylabel('output intensity')
@@ -134,7 +161,7 @@ def plot_equal_histogram(dst, hist_equal,type='original'):
     plt.bar(binX, hist_equal, width=0.5, color='g')
     plt.show()
 
-def plot_before_equal_histogram(src, original_hist,type='original'):
+def plot_before_equal_histogram(src, original_hist, type='original'):
     plt.figure(figsize=(8, 5))
     binX = np.arange(len(original_hist))
     plt.title(type)
@@ -156,16 +183,26 @@ if __name__ == '__main__':
     # src_mul : src * 2
     ###################################################################
 
-    src_add = ???
+    # src_add = np.array(src)
+    src_add = src.astype(np.float32) + 64
+    src_add[src_add < 0] = 0
+    src_add[src_add > 255] = 255
     src_add = np.round(src_add).astype(np.uint8)
 
-    src_sub = ???
+
+    src_sub = src.astype(np.float32) - 64
+    src_sub[src_sub < 0] = 0
+    src_sub[src_sub > 255] = 255
     src_sub = np.round(src_sub).astype(np.uint8)
 
-    src_div = ???
+    src_div = src.astype(np.float32) / 3
+    src_div[src_div < 0] = 0
+    src_div[src_div > 255] = 255
     src_div = np.round(src_div).astype(np.uint8)
 
-    src_mul = ???
+    src_mul = src.astype(np.float32) * 2
+    src_mul[src_mul < 0] = 0
+    src_mul[src_mul > 255] = 255
     src_mul = np.round(src_mul).astype(np.uint8)
 
     # original
@@ -174,21 +211,21 @@ if __name__ == '__main__':
 
     # src_add
     src_add_hist = my_calcHist(src_add)
-    dst_add, hist_add_equal = my_hist_equal(src_add,type='src_add')
+    dst_add, hist_add_equal = my_hist_equal(src_add, type='src_add')
 
     # src_sub
     src_sub_hist = my_calcHist(src_sub)
-    dst_sub, hist_sub_equal = my_hist_equal(src_sub,type='src_sub')
+    dst_sub, hist_sub_equal = my_hist_equal(src_sub, type='src_sub')
 
     # src_div
     src_div_hist = my_calcHist(src_div)
-    dst_div, hist_div_equal = my_hist_equal(src_div,type='src_div')
+    dst_div, hist_div_equal = my_hist_equal(src_div, type='src_div')
 
     # src_mul
     src_mul_hist = my_calcHist(src_mul)
     dst_mul, hist_mul_equal = my_hist_equal(src_mul, type='src_mul')
 
-    cv2.imshow('original',src)
+    cv2.imshow('original', src)
     cv2.imshow('original equal result', dst)
     cv2.waitKey()
     cv2.destroyAllWindows()

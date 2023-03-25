@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 
-def point_processing(src,type='original'):
+def point_processing(src, type='original'):
 
     dst = np.zeros(src.shape, dtype=np.uint8)
 
@@ -86,7 +86,7 @@ def my_cal_Hist(img):
     """
     h, w = img.shape
     # 주어진 이미지의 가진 1차원 배열 생성
-    hist = np.zeros(256, dtype=np.int)
+    hist = np.zeros(256, dtype=np.uint8)
 
     # histogram bin
     for row in range(h):

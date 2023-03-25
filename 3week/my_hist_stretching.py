@@ -18,7 +18,7 @@ def my_cal_Hist(img):
     h, w = img.shape
     # 주어진 이미지의 가진 1차원 배열 생성
     # 256 : 0 ~ 255 범위의 픽셀
-    hist = np.zeros(256, dtype=np.int)
+    hist = np.zeros(256, dtype=np.uint8)
 
     # histogram bin
     for row in range(h):
@@ -42,7 +42,7 @@ def plot_histogram(src):
 
 def main():
 
-    src = cv2.imread('./fruits.jpg',cv2.IMREAD_GRAYSCALE)
+    src = cv2.imread('./fruits.jpg', cv2.IMREAD_GRAYSCALE)
 
     low_contrast_img = np.round(src / 3).astype(np.uint8)
 
@@ -59,8 +59,8 @@ def main():
 
     # 직접 설정 - hyper parameter
     # 잘 모르겠으면 max 255, min 0으로 해볼 것
-    target_max = ???
-    target_min = ???
+    target_max = 255
+    target_min = 0
 
 
     ################################################
@@ -69,8 +69,8 @@ def main():
     # gradient : 기울기
 
     low_contrast_img = low_contrast_img.astype(np.float32)
-    gradient = ???
-    high_contrast_img = ???
+    gradient = (target_max - target_min) / (cur_max - cur_min)
+    high_contrast_img = gradient * (low_contrast_img - cur_min) + target_min
     ##################################################
     high_contrast_img = np.round(high_contrast_img).astype(np.uint8)
 
