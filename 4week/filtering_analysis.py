@@ -14,10 +14,13 @@ def generate_average_filter(ksize):
     # average filter 구현
     #########################################################
 
-    kernel = ???
+    # kernel = ???
+    kernel = np.ones((ksize, ksize))
+    kernel = kernel / np.sum(kernel)
+
     return kernel
 
-def my_padding(src,ksize,pad_type ='zero'):
+def my_padding(src, ksize, pad_type ='zero'):
 
     # default - zero padding으로 셋팅
     (h,w) = src.shape
@@ -75,7 +78,11 @@ def my_filtering(image, kernel):
     # 교수님 이론 PPT 4page 수식 참고
     #########################################################
 
-    ???
+    for row in range(h):
+        for col in range(w):
+            for k_row in range(k_h):
+                for k_col in range(k_w):
+                    dst[row, col] += kernel[k_row, k_col] * pad_image[row + k_row, col + k_col]
 
     # float32 -> uint8(unsigned int)로 변경
     dst = np.round(dst).astype(np.uint8)
@@ -87,7 +94,7 @@ def measure_filtering_time(image, kernel):
     h, w = kernel.shape
     start = time.perf_counter()
     output = my_filtering(image, kernel)
-    print('{} X {} Filter Time : {}'.format(h, w ,(time.perf_counter() - start)))
+    print('{} X {} Filter Time : {}'.format(h, w, (time.perf_counter() - start)))
 
     return output
 

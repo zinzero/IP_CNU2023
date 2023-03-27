@@ -126,7 +126,7 @@ if __name__ == '__main__':
 
     # xxxxxxxxx : 학번 적을 것
     # 안적으면 감점
-    plt.title('xxxxxxxxx Gaussian filter visualization')
+    plt.title('202102695 Gaussian filter visualization')
     plt.plot(???, ???, label='sigma=0.5')
     plt.plot(???, ???, label='sigma=1')
     plt.plot(???, ???, label='sigma=2')
