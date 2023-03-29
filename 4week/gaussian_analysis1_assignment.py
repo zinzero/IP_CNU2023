@@ -3,10 +3,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 
-def my_padding(src,mask,pad_type = 'zero'):
+def my_padding(src, mask, pad_type = 'zero'):
 
     # default - zero padding으로 셋팅
-    (h,w) = src.shape
+    (h, w) = src.shape
     (f_h, f_w) = mask.shape
     p_h = f_h // 2
     p_w = f_w // 2
@@ -42,9 +42,13 @@ def my_filtering(src, mask, pad_type='zero'):
     # TODO 3. Filtering 2중 for문 구현
     #########################################
 
-    for row in range(h):
-        for col in range(w):
-            dst = ???
+    # for row in range(h):
+    #     for col in range(w):
+    #         dst = ???
+    for row in range(h - f_h + 1):
+        for col in range(w - f_w + 1):
+            dst[row, col] = (mask * pad_img[row:row + f_h, col:col + f_w]).sum() # 아웃오브 인덱스 -> 재고하기
+
     dst = np.round(dst).astype(np.uint8)
     return dst
 
@@ -65,13 +69,18 @@ def my_get_Gaussian_filter(fshape, sigma=1):
     #           [-1, 0, 1],
     #           [-1, 0, 1]]
     ############################################################################
+    # if (f_h == 1):
+    #     x = ???
+    #     gaussian_filter = ???
+    #
+    # elif (f_w == 1):
+    #     y = ???
+    #     gaussian_filter = ???
     if (f_h == 1):
-        x = ???
-        gaussian_filter = ???
+        gaussian_filter, x = np.mgrid[sigma:f_h, sigma:f_w]
 
     elif (f_w == 1):
-        y = ???
-        gaussian_filter = ???
+        y, gaussian_filter = np.mgrid[sigma:f_h, sigma:f_w]
 
 
     # mask 총합 1 : 평균 밝기의 변화가 없도록 하기 위함
@@ -102,7 +111,8 @@ if __name__ == '__main__':
     src = cv2.imread('./Lena.png', cv2.IMREAD_GRAYSCALE).astype(np.float32)
 
     # 사용중인 필터를 확인하고 싶으면 True로 변경, 보기 싫으면 False로 변경
-    verbose = False
+    # verbose = False
+    verbose = True
 
     ############################################################################
     # TODO 1. sigma 변화에 따른 1D Gaussian filter 시각화
@@ -113,24 +123,34 @@ if __name__ == '__main__':
     mean = x.mean()
     sigma1 = 0.5
 
-    gaussian_filter1 = ???
+    # gaussian_filter1 = ???
+    gaussian_filter1 = np.exp(-2 * pow(x - mean, 2)) / (0.5 * ((2 * np.pi) ** 0.5))
 
     sigma2 = 1
-    gaussian_filter2 = ???
+    # gaussian_filter2 = ???
+    gaussian_filter2 = np.exp(-(pow(x - mean, 2) / 2)) / (1 * ((2 * np.pi) ** 0.5))
 
     sigma3 = 2
-    gaussian_filter3 = ???
+    # gaussian_filter3 = ???
+    gaussian_filter3 = np.exp(-(pow(x - mean, 2) / 8)) / (2 * ((2 * np.pi) ** 0.5))
 
     sigma4 = 3
-    gaussian_filter4 = ???
+    # gaussian_filter4 = ???
+    gaussian_filter4 = np.exp(-(pow(x - mean, 2) / 18)) / (3 * ((2 * np.pi) ** 0.5))
+
+    # 필터 값 맞나 재고하기
 
     # xxxxxxxxx : 학번 적을 것
     # 안적으면 감점
     plt.title('202102695 Gaussian filter visualization')
-    plt.plot(???, ???, label='sigma=0.5')
-    plt.plot(???, ???, label='sigma=1')
-    plt.plot(???, ???, label='sigma=2')
-    plt.plot(???, ???, label='sigma=3')
+    # plt.plot(???, ???, label='sigma=0.5')
+    # plt.plot(???, ???, label='sigma=1')
+    # plt.plot(???, ???, label='sigma=2')
+    # plt.plot(???, ???, label='sigma=3')
+    plt.plot(mean, sigma1, label='sigma=0.5') # y축 값 다시 생각하기
+    plt.plot(mean, sigma2, label='sigma=1')
+    plt.plot(mean, sigma3, label='sigma=2')
+    plt.plot(mean, sigma4, label='sigma=3')
     plt.legend()
     plt.show()
 

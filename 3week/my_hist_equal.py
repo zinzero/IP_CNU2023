@@ -11,13 +11,13 @@ def my_calcHist(src):
     ###############################
 
     # hist = ???
-    hist = [0] * 256
+    hist = [0] * 256 # hist의 범위는 0 ~ 255
     h, w = src.shape
 
     for row in range(h):
         for col in range(w):
-            intensity = src[row, col]
-            hist[intensity] += 1
+            intensity = src[row, col] # src의 해당 row, col의 픽셀값
+            hist[intensity] += 1 # 픽셀값과 같은 인덱스의 hist수를 증가
 
     return hist
 
@@ -31,9 +31,9 @@ def my_normalize_hist(hist, pixel_num):
     ########################################################
 
     # normalized_hist = ???
-    normalized_hist = np.zeros(len(hist))
+    normalized_hist = np.zeros(len(hist)) # hist와 같은 크기의 배열 생성
     for i in range(len(normalized_hist)):
-        normalized_hist[i] = hist[i] / pixel_num
+        normalized_hist[i] = hist[i] / pixel_num # for문을 돌면서 나누어줌
 
     return normalized_hist
 
@@ -46,11 +46,11 @@ def my_PDF2CDF(pdf):
     # cdf : pdf의 누적                                     #
     ########################################################
 
-    cdf = np.zeros(pdf.shape)
+    cdf = np.zeros(pdf.shape) # pdf랑 같은 모양의  행렬 생성 
     # cdf = ???
-    cdf[0] = pdf[0]
+    cdf[0] = pdf[0] # base case
     for i in range(1, len(cdf)):
-        cdf[i] = pdf[i] + cdf[i - 1]
+        cdf[i] = pdf[i] + cdf[i - 1] # pdf 값을 누적해줌
 
     return cdf
 
@@ -79,7 +79,7 @@ def my_calcHist_equalization(denormalized, hist):
     ####################################################################
 
     # hist_equal = ???
-    hist_equal = np.zeros(256, dtype=np.uint8)
+    hist_equal = np.zeros(256, dtype=np.uint8) # 배열 생성
 
     for i in range(len(hist_equal)):
         hist_equal[denormalized[i]] += hist[i]
@@ -97,7 +97,7 @@ def my_equal_img(src, output_gray_level):
     ####################################################################
 
     (h, w) = src.shape
-    dst = np.zeros((h, w), dtype=np.uint8)
+    dst = np.zeros((h, w), dtype=np.uint8) # src와 같은 크기의 행렬 생성
 
     # for row in range(h):
     #     for col in range(w):
@@ -106,7 +106,7 @@ def my_equal_img(src, output_gray_level):
 
     for row in range(h):
         for col in range(w):
-            dst[row, col] = output_gray_level[src[row, col]]
+            dst[row, col] = output_gray_level[src[row, col]] # 
     return dst
 
 
@@ -183,23 +183,25 @@ if __name__ == '__main__':
     # src_mul : src * 2
     ###################################################################
 
-    # src_add = np.array(src)
+    # src_add = ???
     src_add = src.astype(np.float32) + 64
     src_add[src_add < 0] = 0
     src_add[src_add > 255] = 255
     src_add = np.round(src_add).astype(np.uint8)
 
-
+    # src_sub = ???
     src_sub = src.astype(np.float32) - 64
     src_sub[src_sub < 0] = 0
     src_sub[src_sub > 255] = 255
     src_sub = np.round(src_sub).astype(np.uint8)
 
+    # src_div = ???
     src_div = src.astype(np.float32) / 3
     src_div[src_div < 0] = 0
     src_div[src_div > 255] = 255
     src_div = np.round(src_div).astype(np.uint8)
 
+    # src_mul = ???
     src_mul = src.astype(np.float32) * 2
     src_mul[src_mul < 0] = 0
     src_mul[src_mul > 255] = 255
