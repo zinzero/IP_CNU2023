@@ -42,13 +42,10 @@ def my_filtering(src, mask, pad_type='zero'):
     # TODO 3. Filtering 2중 for문 구현
     #########################################
 
-    # for row in range(h):
-    #     for col in range(w):
-    #         dst = ???
-    for row in range(h - f_h + 1):
-        for col in range(w - f_w + 1):
-            dst[row, col] = (mask * pad_img[row:row + f_h, col:col + f_w]).sum() # 아웃오브 인덱스 -> 재고하기
-
+    for row in range(h):
+        for col in range(w):
+            # dst = ???
+            dst[row, col] = np.sum(mask * pad_img[row:row + f_h, col:col + f_w])
     dst = np.round(dst).astype(np.uint8)
     return dst
 
@@ -69,19 +66,17 @@ def my_get_Gaussian_filter(fshape, sigma=1):
     #           [-1, 0, 1],
     #           [-1, 0, 1]]
     ############################################################################
-    # if (f_h == 1):
-    #     x = ???
-    #     gaussian_filter = ???
-    #
-    # elif (f_w == 1):
-    #     y = ???
-    #     gaussian_filter = ???
     if (f_h == 1):
-        gaussian_filter, x = np.mgrid[sigma:f_h, sigma:f_w]
+        # x = ???
+        x, _ = np.mgrid[-int(f_w/2):int(f_w/2)+1, 0:1]
+        mean = 0
+        gaussian_filter = np.exp(-((x-mean) ** 2) / (2 * sigma ** 2)) / (sigma * (2 * np.pi) ** 0.5)
 
     elif (f_w == 1):
-        y, gaussian_filter = np.mgrid[sigma:f_h, sigma:f_w]
-
+        # y = ???
+        _, y = np.mgrid[0:1, -int(f_h/2):int(f_h/2)+1]
+        mean = 0
+        gaussian_filter = np.exp(-((y-mean) ** 2) / (2 * sigma ** 2)) / (sigma * (2 * np.pi) ** 0.5)
 
     # mask 총합 1 : 평균 밝기의 변화가 없도록 하기 위함
     gaussian_filter = gaussian_filter / np.sum(gaussian_filter)
@@ -111,8 +106,8 @@ if __name__ == '__main__':
     src = cv2.imread('./Lena.png', cv2.IMREAD_GRAYSCALE).astype(np.float32)
 
     # 사용중인 필터를 확인하고 싶으면 True로 변경, 보기 싫으면 False로 변경
-    # verbose = False
-    verbose = True
+    verbose = False
+    # verbose = True
 
     ############################################################################
     # TODO 1. sigma 변화에 따른 1D Gaussian filter 시각화
@@ -121,24 +116,23 @@ if __name__ == '__main__':
     ############################################################################
     x = np.linspace(-5, 5, 1000)
     mean = x.mean()
-    sigma1 = 0.5
 
+    sigma1 = 0.5
     # gaussian_filter1 = ???
-    gaussian_filter1 = np.exp(-2 * pow(x - mean, 2)) / (0.5 * ((2 * np.pi) ** 0.5))
+    gaussian_filter1 = np.exp(-((x-mean) ** 2) / (2 * sigma1 ** 2)) / sigma1 * (2 * np.pi) ** 0.5
 
     sigma2 = 1
     # gaussian_filter2 = ???
-    gaussian_filter2 = np.exp(-(pow(x - mean, 2) / 2)) / (1 * ((2 * np.pi) ** 0.5))
+    gaussian_filter2 = np.exp(-((x-mean) ** 2) / (2 * sigma2 ** 2)) / sigma2 * (2 * np.pi) ** 0.5
 
     sigma3 = 2
     # gaussian_filter3 = ???
-    gaussian_filter3 = np.exp(-(pow(x - mean, 2) / 8)) / (2 * ((2 * np.pi) ** 0.5))
+    gaussian_filter3 = np.exp(-((x-mean) ** 2) / (2 * sigma3 ** 2)) / sigma3 * (2 * np.pi) ** 0.5
 
     sigma4 = 3
     # gaussian_filter4 = ???
-    gaussian_filter4 = np.exp(-(pow(x - mean, 2) / 18)) / (3 * ((2 * np.pi) ** 0.5))
+    gaussian_filter4 = np.exp(-((x-mean) ** 2) / (2 * sigma4 ** 2)) / sigma4 * (2 * np.pi) ** 0.5
 
-    # 필터 값 맞나 재고하기
 
     # xxxxxxxxx : 학번 적을 것
     # 안적으면 감점
@@ -147,10 +141,10 @@ if __name__ == '__main__':
     # plt.plot(???, ???, label='sigma=1')
     # plt.plot(???, ???, label='sigma=2')
     # plt.plot(???, ???, label='sigma=3')
-    plt.plot(mean, sigma1, label='sigma=0.5') # y축 값 다시 생각하기
-    plt.plot(mean, sigma2, label='sigma=1')
-    plt.plot(mean, sigma3, label='sigma=2')
-    plt.plot(mean, sigma4, label='sigma=3')
+    plt.plot(x, gaussian_filter1, label='sigma=0.5')
+    plt.plot(x, gaussian_filter2, label='sigma=1')
+    plt.plot(x, gaussian_filter3, label='sigma=2')
+    plt.plot(x, gaussian_filter4, label='sigma=3')
     plt.legend()
     plt.show()
 

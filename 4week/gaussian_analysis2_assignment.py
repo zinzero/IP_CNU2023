@@ -1,3 +1,4 @@
+from tkinter import Y
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
@@ -45,7 +46,8 @@ def my_filtering(src, mask, pad_type='zero'):
 
     for row in range(h):
         for col in range(w):
-            dst = ???
+            # dst = ???
+            dst[row, col] = np.sum(mask * pad_img[row:row + f_h, col:col + f_w])
     dst = np.round(dst).astype(np.uint8)
     return dst
 
@@ -66,10 +68,12 @@ def my_get_Gaussian_filter(fshape, sigma=1):
     #           [-1, 0, 1]]
     ############################################################################
 
-    y, x = ???
+    # y, x = ???
+    x, y = np.mgrid[-int(f_w/2):int(f_w/2)+1, -int(f_h/2):int(f_h/2)+1]
 
     # 2차 gaussian mask 생성
-    gaussian_filter = ???
+    # gaussian_filter = ???
+    gaussian_filter = np.exp(-(((x ** 2) + (y ** 2)) / (2 * (sigma ** 2)))) 
 
     # mask 총합 1 : 평균 밝기의 변화가 없도록 하기 위함
     gaussian_filter = gaussian_filter / np.sum(gaussian_filter)
