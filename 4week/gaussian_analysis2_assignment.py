@@ -73,7 +73,7 @@ def my_get_Gaussian_filter(fshape, sigma=1):
 
     # 2차 gaussian mask 생성
     # gaussian_filter = ???
-    gaussian_filter = np.exp(-(((x ** 2) + (y ** 2)) / (2 * (sigma ** 2)))) 
+    gaussian_filter = np.exp(-(((x ** 2) + (y ** 2)) / (2 * (sigma ** 2)))) / 2 * np.pi * (sigma ** 2)
 
     # mask 총합 1 : 평균 밝기의 변화가 없도록 하기 위함
     gaussian_filter = gaussian_filter / np.sum(gaussian_filter)
