@@ -57,25 +57,20 @@ def my_laplacian_pyramid(src, ratio, pyramid_lvl, filter_size, sigma):
         # 1. Gaussian filtering
         # 2. residual 계산 및 저장
         #   2.1 1의 filtering된 이미지를 downsampling 후 upsampling
-        #   2.2 residual = filtering된 이미지 - 2.1에서 구한 이미지
+        #   2.2 residual = gaussian pyramid(G_{i}) - 2.1에서 구한 이미지(G_{i}')
         # 3. 2.1에서 downsampling한 이미지를 다음 피라미드의 입력으로 설정
         # 4. 1 ~ 3 과정을 반복, gaussian의 마지막 이미지의 경우
         ######################################################
 
         # 1. Gaussian filtering
         filtered_img = cv2.filter2D(gaussian_pyramid[-1], -1, gaussian_filter)
-        filter_imgs.append(np.round(filtered_img).astype(np.uint8))
-
-        if level == 0:
-            # 원본 이미지 삭제
-            gaussian_pyramid.pop()
 
         # 2. residual 계산 및 저장
         down_gaussian_img = my_downsampling(filtered_img, ratio)
         up_gaussian_img = cv2.resize(down_gaussian_img, dsize=(0, 0),
                                      fx=ratio, fy=ratio, interpolation=cv2.INTER_LINEAR)
         after_imgs.append(np.round(up_gaussian_img).astype(np.uint8))
-        residual = filtered_img - up_gaussian_img
+        residual = gaussian_pyramid[-1] - up_gaussian_img
 
         # residual visualize : min-max scaling을 통해 이미지를 0 ~ 1로 normalization
         # 그 후에 uint형으로 데이터 타입을 바꾸기 위해 255를 곱함
@@ -88,7 +83,7 @@ def my_laplacian_pyramid(src, ratio, pyramid_lvl, filter_size, sigma):
         gaussian_pyramid.append(down_gaussian_img)
         downsample_imgs.append(np.round(down_gaussian_img).astype(np.uint8))
 
-    return filter_imgs, after_imgs, residuals_visualized, downsample_imgs
+    return gaussian_pyramid[:-1], after_imgs, residuals_visualized, downsample_imgs
 
 
 def plot_imgs(previous, after_img, residual_img, downsample_img, level):
