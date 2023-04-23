@@ -21,13 +21,10 @@ def my_bilinear(src, scale):
             y = row / scale
             x = col / scale
 
-            # bilinear interpolation
-            # 1.(y,x)를 기준으로 좌측위, 좌측아래, 우측아래, 우측위 좌표를 구함.
-            # 2. bilinear interplation 식에 따라 해당 row,col좌표에 값을 대입
-            y_up = int(y) # 버림
-            y_down = min(int(y+1), h-1) # 반올림 단 src의 최대 좌표값보다는 같거나 작게
-            x_left = int(x) # 버림
-            x_right = min(int(x+1), w-1) # 반올림 단 src의 최대 좌표값보다는 같거나 작게
+            y_up = int(y)
+            y_down = min(int(y+1), h-1)
+            x_left = int(x)
+            x_right = min(int(x+1), w-1)
 
             t = y - y_up
             s = x - x_left
@@ -116,7 +113,6 @@ def my_upsampling_laplacian(src, ratio, residuals=None, upsampling_type='bilinea
             # TODO residuals 변수 사용
             #######################################################################
             # x = ???
-            # x += residuals[i]
             x = x + residuals[i]
 
 
@@ -169,34 +165,19 @@ def my_downsampling_pyramid(src, ratio, pyramid_lvl, filter_size, sigma, interpo
 
             # residual = ???
 
-            # laplacian_residual = gaussian_pyramid[level] - my_upsampling_laplacian(filtered_img[::ratio, ::ratio], ratio, interpolation_type)
-
-            #
-            # if interpolation_type == 'nearest':
-            #     down_img = filtered_img[::ratio, ::ratio]
-            #     up_img = my_upsampling_laplacian(filtered_img, ratio)
-            #     laplacian_residul = gaussian_pyramid[level] - up_img
-            #     laplacian_residuals.append(laplacian_residul)
-            # else:
-            #     down_img = filtered_img[::ratio, ::ratio]
-            #     up_img =
-
-            down_img = filtered_img[::ratio, ::ratio]
-            # down_img = gaussian_pyramid[-1][::ratio, ::ratio]
-            if interpolation_type == 'bilinear':
-                up_img = my_bilinear(down_img, ratio)
+            downsaple_img = filtered_img[::ratio, ::ratio]
+            if interpolation_type == 'nearest':
+                upsample_img = my_nearest_neighbor(downsaple_img, (ratio, ratio))
             else:
-                up_img = my_nearest_neighbor(down_img, (ratio, ratio))
-            # up_img = my_upsampling_laplacian(down_img, ratio, residuals=None, upsampling_type=interpolation_type,
-            #                                  pyramid_level=level)
-            # 이건 왜 안 되는건데 sibal
-            laplacian_residual = gaussian_pyramid[-1] - up_img
+                upsample_img = my_bilinear(downsaple_img, ratio)
+
+            laplacian_residual = gaussian_pyramid[-1] - upsample_img
 
             laplacian_residuals.append(laplacian_residual)
 
             # 3. 2.1에서 downsampling한 이미지를 다음 피라미드의 입력으로 설정
             # gaussian_pyramid.append(???)
-            gaussian_pyramid.append(down_img)
+            gaussian_pyramid.append(downsaple_img)
 
         return laplacian_residuals, gaussian_pyramid[-1]
 
@@ -212,10 +193,8 @@ def my_downsampling_pyramid(src, ratio, pyramid_lvl, filter_size, sigma, interpo
             ###########################################################################
 
             # ???
-            # subsample_img = gaussian_pyramid[-1][::ratio, ::ratio]
-
             if interpolation_type == 'nearest':
-                subsample_img = my_nearest_neighbor(gaussian_pyramid[-1], (1/ ratio, 1/ ratio))
+                subsample_img = my_nearest_neighbor(gaussian_pyramid[-1], (1 / ratio, 1 / ratio))
             else:
                 subsample_img = my_bilinear(gaussian_pyramid[-1], 1/ratio)
 
