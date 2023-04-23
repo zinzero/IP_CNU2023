@@ -31,7 +31,12 @@ def my_get_Gaussian_filter(fshape, sigma=1):
     ############################################################################
 
 
-    gaussian_filter = ???
+    # gaussian_filter = ???
+    ##############
+    y, x = np.mgrid[-int(f_h / 2):int(f_h / 2) + 1, -int(f_w / 2):int(f_w / 2) + 1]
+    gaussian_filter = np.exp(-(((x ** 2) + (y ** 2)) / (2 * (sigma ** 2)))) / 2 * np.pi * (sigma ** 2)
+    gaussian_filter = gaussian_filter / np.sum(gaussian_filter)
+    ##############
     return gaussian_filter
 
 def get_DoG_filter_by_filtering(fsize, sigma):
@@ -54,14 +59,23 @@ def get_DoG_filter_by_filtering(fsize, sigma):
     # TODO NOTE filtering시 내장 함수 사용 금지 (cv2.filter2D)
     ############################################################################
 
-    dog_y_filter = ???
+    # dog_y_filter = ???
 
-    dog_x_filter = ???
+    # dog_x_filter = ???
+    ############
+    derivate_x = np.array([-1, 0, 1]).reshape(1, 3)
+    derivate_y = np.array([-1, 0, 1]).reshape(3, 1)
+
+    gaussian_filter = my_get_Gaussian_filter((fsize, fsize), sigma)
+
+    dog_x_filter = filtering(gaussian_filter, derivate_x)
+    dog_y_filter = filtering(gaussian_filter, derivate_y)
+    ############
     return dog_y_filter, dog_x_filter
 
 def get_DoG_filter_by_expression(fsize, sigma):
     """
-    
+
     :param fsize: dog filter 크
     :param sigma: sigma 값
     :return: DoG_y, DoG_x
@@ -81,8 +95,13 @@ def get_DoG_filter_by_expression(fsize, sigma):
     # TODO 수식은 이론 및 실습 ppt를 참고하여 구현.
     ############################################################################
 
-    DoG_x = ???
-    DoG_y = ???
+    # DoG_x = ???
+    # DoG_y = ???
+    ############
+    y, x = np.mgrid[-int(fsize / 2): int(fsize / 2) + 1, -int(fsize / 2): int(fsize / 2) + 1]
+    DoG_x = -(x / 2 * np.pi * sigma ** 4) * np.exp(-(x ** 2 + y ** 2) / (2 * sigma ** 2))
+    DoG_y = -(y / 2 * np.pi * sigma ** 4) * np.exp(-(x ** 2 + y ** 2) / (2 * sigma ** 2))
+    ############
 
     return DoG_y, DoG_x
 
@@ -93,7 +112,7 @@ def calculate_magnitude(sobel_x, sobel_y):
 def make_noise(std, gray):
 
     height, width = gray.shape
-    img_noise = np.zeros((height, width), dtype=np.float)
+    img_noise = np.zeros((height, width), dtype=np.float64)
     for i in range(height):
         for a in range(width):
             make_noise = np.random.normal()  # 랜덤함수를 이용하여 노이즈 적용
