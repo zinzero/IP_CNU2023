@@ -63,8 +63,7 @@ def get_DoG_filter_by_filtering(fsize, sigma):
 
     # dog_x_filter = ???
     ############
-    derivate_x = np.array([-1, 0, 1]).reshape(1, 3)
-    derivate_y = np.array([-1, 0, 1]).reshape(3, 1)
+    derivate_y, derivate_x = np.mgrid[-int(fsize / 2):int(fsize / 2) + 1, -int(fsize / 2):int(fsize / 2) + 1]
 
     gaussian_filter = my_get_Gaussian_filter((fsize, fsize), sigma)
 
