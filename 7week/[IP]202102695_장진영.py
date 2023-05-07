@@ -45,7 +45,8 @@ def calcMagnitude(Ix, Iy):
     # magnitude : ix와 iy의 magnitude         #
     ###########################################
     # Ix와 Iy의 magnitude를 계산
-    magnitude = None
+    # magnitude = None
+    magnitude = np.sqrt(Ix ** 2 + Iy ** 2)
     return magnitude
 
 def calcAngle(Ix, Iy):
@@ -54,7 +55,8 @@ def calcAngle(Ix, Iy):
     # calcAngle 완성                      #
     # angle     : ix와 iy의 angle         #
     #######################################
-    angle = None
+    # angle = None
+    angle = np.arctan(Iy, Ix)
     return angle
 
 def pixel_bilinear_coordinate(src, pixel_coordinate):
@@ -69,19 +71,32 @@ def pixel_bilinear_coordinate(src, pixel_coordinate):
 
     # 주변 픽셀 위치 4개를 가져옴.
     # 가져오는 방식은 저번주 실습을 참고하여 가져오는 것을 추천.
-    y_up = None
-    y_down = None
-    x_left = None
-    x_right = None
+    # y_up = None
+    # y_down = None
+    # x_left = None
+    # x_right = None
+
+    y_up = int(pixel_coordinate[0])
+    y_down = int(pixel_coordinate[0]) + 1
+    x_left = int(pixel_coordinate[1])
+    x_right = int(pixel_coordinate[1]) + 1
 
     # x 비율, y 비율을 계산하는 코드
     # 저번 실습 자료 참고.
-    t = None
-    s = None
+    # t = None
+    # s = None
+
+    t = pixel_coordinate[0] - y_up
+    s = pixel_coordinate[1] - x_left
 
     # Bilinear Interpolation 구현 부분
     # 저번 실습 자료 참고.
-    intensity = None
+    # intensity = None
+
+    intensity = ((1 - s) * (1 - t) * src[y_up, x_left]) \
+                + (s * (1 - t) * src[y_up, x_right]) \
+                + ((1 - s) * t * src[y_down, x_left]) \
+                + (s * t * src[y_down, x_right])
 
     return intensity
 
