@@ -18,7 +18,63 @@ def get_threshold_by_within_variance(intensity, p):
     # TODO  교수님 이론 PPT 22 page 참고
     ########################################################
 
-    ???
+    # ???
+    # i 까지의 p의 합
+    q1 = np.zeros((256,))
+    q2 = np.zeros((256,))
+    for i in range(0, 256):
+        q1[i] = p[i]
+        q2[i] = 1 - q1[i]
+
+
+    # i 까지의 평균
+    m1 = np.zeros((256,))
+    m2 = np.zeros((256,))
+    for i in range(0, 256):
+        if q1[i] != 0:
+            m1[i] = (p[i] * intensity[i]) / q1[i]
+        else:
+            m1[i] = 0
+        for j in range(i + 1, 256):
+            if q2[j] != 0:
+                m2[j] = (p[j] * intensity[j]) / q2[j]
+            else:
+                m2[j] = 0
+
+    # m1 = [0 for _ in range(256)]
+    # m2 = [0 for _ in range(256)]
+    # for i in range(0, 256):
+    #     m1[i] = (p[i] * intensity[i]) / q1[i]
+    #     for j in range(i, 256):
+    #         m1[i] = (p[j] * intensity[j]) / q1[j]
+
+    # 분산
+    sigma1 = np.zeros((256,))
+    sigma2 = np.zeros((256,))
+    for i in range(0, 256):
+        if q1[i] != 0:
+            sigma1[i] = ((intensity[i] ** 2) * p[i] - (m1[i] ** 2)) / q1[i]
+        else:
+            sigma1[i] = 0
+        for j in range(i + 1, 256):
+            if q2[j] != 0:
+                sigma2[j] = ((intensity[j] ** 2) * p[j] - (m2[j] ** 2)) / q2[j]
+            else:
+                sigma2[j] = 0
+
+    # sigma1 = [0 for _ in range(256)]
+    # sigma2 = [0 for _ in range(256)]
+    # for i in range(0, 256):
+    #     sigma1[i] = ((intensity[i] ** 2) * p[i] - (m1[i] ** 2)) / q1[i]
+    #     for j in range(i, 256):
+    #         sigma2[i] = ((intensity[i] ** 2) * p[i] - (m2[j] ** 2)) / q2[j]
+
+
+    sigma = [0 for _ in range(256)]
+    for i in range(0, 256):
+        sigma[i] = q1[i] * sigma1[i] + q2[i] * sigma2[i]
+
+    k = np.argmin(sigma)
 
     return k
 
@@ -39,7 +95,30 @@ def get_threshold_by_inter_variance(p):
 
     p += 1e-7  # q1과 q2가 0일때 나눗셈을 진행할 경우 오류를 막기 위함
 
-    ???
+    # ???
+    q1 = [0 for _ in range(256)]
+    q1.append(p[0])
+    for i in range(0, 255):
+        q1[i + 1] = q1[i] + p[i + 1]
+
+    m1 = [0 for _ in range(256)]
+    for i in range(0, 255):
+        m1[i + 1] = (q1[i] * m1[i] + (i + 1) * p[i + 1]) / q1[i + 1]
+
+    m2 = [0 for _ in range(256)]
+    for i in range(1, 256):
+        m2[0] += p[i] * i
+
+    m2[0] = m2[0] / (1 - q1[0])
+
+    for i in range(0, 255):
+        m2[i + 1] = ((1 - q1[i]) * m2[i] - (i + 1) * p[i + 1]) / (1 - q1[i + 1])
+
+    sigma = [0 for _ in range(256)]
+    for i in range(0, 256):
+        sigma[i] = q1[i] * (1 - q1[i]) * ((m1[i] - m2[i]) ** 2)
+
+    k = np.argmin(sigma)
 
     return k
 
@@ -59,7 +138,14 @@ def get_hist(src, mask):
     #######################################################################
     hist = np.zeros((256,))
 
-    ???
+    # ???
+    (h, w) = src.shape
+
+    for row in range(h):
+        for col in range(w):
+            if mask[row, col] != 0:
+                intensity = src[row, col]
+                hist[intensity] += 1
 
     return hist
 
@@ -85,11 +171,11 @@ def threshold(src, threshold, mask):
 
     # ???
     for row in range(h):
-        for col in  range(w):
-            if mask == 0:
+        for col in range(w):
+            if mask[row, col] == 0:
                 dst[row, col] = 0
             else:
-                if 0 < src[row, col] and src[row, col] <= threshold:
+                if 0 < src[row, col] <= threshold:
                     dst[row, col] = 255
                 else:
                     dst[row, col] = 0
@@ -122,8 +208,8 @@ def otsu_method(src, mask):
     # TODO 상대도수 p 구하기
     # TODO 교수님 이론 PPT 17 page -> p_{i}에 해당
     ########################################################
-    p = ???
-
+    # p = ???
+    p = hist / np.sum(hist)
     ########################################################
     # TODO otsu_method 완성
     # TODO  1. within-class variance를 이용한 방법
@@ -137,6 +223,8 @@ def otsu_method(src, mask):
 
     # k1과 k2가 같아야 한다.
     # 같지 않으면 실행 종료
+    print("k1 : ", k1)
+    print("k2 : ", k2)
     assert k1 == k2
 
     dst1 = threshold(src, k1, mask)
@@ -149,8 +237,10 @@ def otsu_method(src, mask):
     ########################################################
     # Bi-modal Distribution
     plt.plot(intensity, hist)
-    plt.plot(???, ???, color='red', marker='o', markersize=6)
-    plt.plot(???, ???, color='red', marker='o', markersize=6)
+    # plt.plot(???, ???, color='red', marker='o', markersize=6)
+    # plt.plot(???, ???, color='red', marker='o', markersize=6)
+    plt.plot(np.argmax(hist[:k1]), hist[np.argmax(hist[:k1])], color='red', marker='o', markersize=6)
+    plt.plot(np.argmax(hist[k1 + 1:]), hist[np.argmax(hist[k1 + 1:])], color='red', marker='o', markersize=6)
     plt.xlabel('Pixel value')
     plt.ylabel('Frequency')
     plt.title('Interest region histogram')
@@ -184,10 +274,10 @@ def main():
     final2 = cv2.add(meat, dst1)
 
     # 본인 학번 적기
-    cv2.imshow('2021xxxx within_variance dst', dst1)
-    cv2.imshow('2021xxxx inter_variance dst', dst2)
-    cv2.imshow('2021xxxx final1', final1)
-    cv2.imshow('2021xxxx final2', final2)
+    cv2.imshow('202102695 within_variance dst', dst1)
+    cv2.imshow('202102695 inter_variance dst', dst2)
+    cv2.imshow('202102695 final1', final1)
+    cv2.imshow('202102695 final2', final2)
 
     cv2.waitKey()
     cv2.destroyAllWindows()
