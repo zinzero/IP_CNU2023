@@ -58,7 +58,7 @@ def Spatial2Frequency_mask(n=4):
             # TODO full mask는 각 sub mask로 구성되어있음
             ##########################################################################
             # submask = ???
-            # submask = np.zeros((n, n))
+
             submask = np.cos(((2 * y + 1) * v_ * np.pi) / (2 * n)) * \
                                 np.cos(((2 * x + 1) * u_ * np.pi) / (2 * n))
 
