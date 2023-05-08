@@ -82,19 +82,11 @@ def my_transform(src):
     # TODO mask를 normalization(0 ~ 1)후 (0 ~ 255)의 값을 갖도록 변환
     ##############################################################################
     # ???
-
-    (h, w) = src.shape
-    dst = np.zeros((h, w), dtype=np.float32)
-    for row in range(h):
-        for col in range(w):
-            dst[row, col] = (src[row, col] / (h * w))
-    dst = (src * 255).astype(np.uint8)
-
-    # if(src.max() == src.min()):
-    #     norm = src / 1
-    # else:
-    #     norm = ((src - src.min()) / (src.max() - src.min()))
-    # dst = (norm * 255).astype(np.uint8)
+    if src.max() == src.min():
+        norm = src
+    else:
+        norm = ((src - src.min()) / (src.max() - src.min()))
+    dst = (norm * 255).astype(np.uint8)
 
     return dst
 

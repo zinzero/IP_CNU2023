@@ -83,7 +83,16 @@ def threshold(src, threshold, mask):
     h, w = src.shape
     dst = np.zeros((h, w), dtype=np.uint8)
 
-    ???
+    # ???
+    for row in range(h):
+        for col in  range(w):
+            if mask == 0:
+                dst[row, col] = 0
+            else:
+                if 0 < src[row, col] and src[row, col] <= threshold:
+                    dst[row, col] = 255
+                else:
+                    dst[row, col] = 0
 
     return dst
 
