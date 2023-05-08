@@ -58,35 +58,11 @@ def Spatial2Frequency_mask(n=4):
             # TODO full mask는 각 sub mask로 구성되어있음
             ##########################################################################
             # submask = ???
-            submask = np.zeros((n, n))
-
-            for row in range(n):
-                for col in range(n):
-                    submask[row, col] = np.cos(((2 * row + 1) * v_ * np.pi) / (2 * n)) * \
-                                        np.cos(((2 * col + 1) * u_ * np.pi) / (2 * n))
-            # submask = np.cos(((2 * y + 1) * v_ * np.pi) / (2 * n)) * \
-            #             np.cos(((2 * x + 1) * u_ * np.pi) / (2 * n))
-
-                    #
-                    # if row == 0 and col == 0:
-                    #     submask[row, col] = (np.sqrt(1 / n) * np.sqrt(1 / n)) * \
-                    #                         np.cos(((2 * row + 1) * v_ * np.pi) / (2 * n)) * \
-                    #                         np.cos(((2 * col + 1) * u_ * np.pi) / (2 * n))
-                    # elif row == 0:
-                    #     submask[row, col] = (np.sqrt(1 / n) * np.sqrt(2 / n)) * \
-                    #                         np.cos(((2 * row + 1) * v_ * np.pi) / (2 * n)) * \
-                    #                         np.cos(((2 * col + 1) * u_ * np.pi) / (2 * n))
-                    # elif col == 0:
-                    #     submask[row, col] = (np.sqrt(2 / n) * np.sqrt(1 / n)) * \
-                    #                         np.cos(((2 * row + 1) * v_ * np.pi) / (2 * n)) * \
-                    #                         np.cos(((2 * col + 1) * u_ * np.pi) / (2 * n))
-                    # else:
-                    #     submask[row, col] = (np.sqrt(2 / n) * np.sqrt(2 / n)) * \
-                    #                         np.cos(((2 * row + 1) * v_ * np.pi) / (2 * n)) * \
-                    #                         np.cos(((2 * col + 1) * u_ * np.pi) / (2 * n))
+            # submask = np.zeros((n, n))
+            submask = np.cos(((2 * y + 1) * v_ * np.pi) / (2 * n)) * \
+                                np.cos(((2 * x + 1) * u_ * np.pi) / (2 * n))
 
             submask = my_transform(submask)
-
             full_mask[v * v_:v * v_ + v, u * u_:u * u_ + u] = submask
 
 
@@ -106,13 +82,19 @@ def my_transform(src):
     # TODO mask를 normalization(0 ~ 1)후 (0 ~ 255)의 값을 갖도록 변환
     ##############################################################################
     # ???
+
     (h, w) = src.shape
     dst = np.zeros((h, w), dtype=np.float32)
     for row in range(h):
         for col in range(w):
-            dst[row, col] = src[row, col] / h * w
+            dst[row, col] = (src[row, col] / (h * w))
+    dst = (src * 255).astype(np.uint8)
 
-    dst = (dst * 255).astype(np.uint8)
+    # if(src.max() == src.min()):
+    #     norm = src / 1
+    # else:
+    #     norm = ((src - src.min()) / (src.max() - src.min()))
+    # dst = (norm * 255).astype(np.uint8)
 
     return dst
 
