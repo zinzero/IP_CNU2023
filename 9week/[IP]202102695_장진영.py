@@ -19,62 +19,57 @@ def get_threshold_by_within_variance(intensity, p):
     ########################################################
 
     # ???
-    # i 까지의 p의 합
+    # k 까지의 p의 합
     q1 = np.zeros((256,))
     q2 = np.zeros((256,))
-    for i in range(0, 256):
-        q1[i] = p[i]
-        q2[i] = 1 - q1[i]
+    for k in range(0, 256):
+        for j in range(0, k + 1):
+            q1[k] += p[j]
+        for i in range(k + 1, 256):
+            q2[k] += p[i]
 
-
-    # i 까지의 평균
+    # k 까지의 평균
     m1 = np.zeros((256,))
     m2 = np.zeros((256,))
-    for i in range(0, 256):
-        if q1[i] != 0:
-            m1[i] = (p[i] * intensity[i]) / q1[i]
-        else:
-            m1[i] = 0
-        for j in range(i + 1, 256):
-            if q2[j] != 0:
-                m2[j] = (p[j] * intensity[j]) / q2[j]
-            else:
-                m2[j] = 0
 
-    # m1 = [0 for _ in range(256)]
-    # m2 = [0 for _ in range(256)]
-    # for i in range(0, 256):
-    #     m1[i] = (p[i] * intensity[i]) / q1[i]
-    #     for j in range(i, 256):
-    #         m1[i] = (p[j] * intensity[j]) / q1[j]
+    for k in range(0, 256):
+        for i in range(0, k + 1):
+            m1[k] += intensity[i] * p[i]
+        if q1[k] == 0:
+            m1[k] = 0
+        else:
+            m1[k] = m1[k] / q1[k]
+        for j in range(k + 1, 256):
+            m2[k] += intensity[j] * p[j]
+        if q2[k] == 0:
+            m2[k] = 0
+        else:
+            m2[k] = m2[k] / q2[k]
 
     # 분산
     sigma1 = np.zeros((256,))
     sigma2 = np.zeros((256,))
-    for i in range(0, 256):
-        if q1[i] != 0:
-            sigma1[i] = ((intensity[i] ** 2) * p[i] - (m1[i] ** 2)) / q1[i]
+
+    for k in range(0, 256):
+        for i in range(0, k + 1):
+            sigma1[k] += intensity[i] ** 2 * p[i] - m1[k] ** 2
+        if q1[k] == 0:
+            sigma1[k] = 0
         else:
-            sigma1[i] = 0
-        for j in range(i + 1, 256):
-            if q2[j] != 0:
-                sigma2[j] = ((intensity[j] ** 2) * p[j] - (m2[j] ** 2)) / q2[j]
-            else:
-                sigma2[j] = 0
-
-    # sigma1 = [0 for _ in range(256)]
-    # sigma2 = [0 for _ in range(256)]
-    # for i in range(0, 256):
-    #     sigma1[i] = ((intensity[i] ** 2) * p[i] - (m1[i] ** 2)) / q1[i]
-    #     for j in range(i, 256):
-    #         sigma2[i] = ((intensity[i] ** 2) * p[i] - (m2[j] ** 2)) / q2[j]
+            sigma1[k] = sigma1[k] / q1[k]
+        for j in range(k + 1, 256):
+            sigma2[k] += intensity[i] ** 2 * p[i] - m2[k] ** 2
+        if q2[k] == 0:
+            sigma2[k] = 0
+        else:
+            sigma2[k] = sigma2[k] / q2[k]
 
 
-    sigma = [0 for _ in range(256)]
-    for i in range(0, 256):
-        sigma[i] = q1[i] * sigma1[i] + q2[i] * sigma2[i]
+    sigma = np.zeros((256,))
+    for k in range(0, 256):
+        sigma[k] = q1[k] * sigma1[k] + q2[k] * sigma2[k]
 
-    k = np.argmin(sigma)
+    k = np.argmin(sigma).astype(np.int32)
 
     return k
 
@@ -96,29 +91,30 @@ def get_threshold_by_inter_variance(p):
     p += 1e-7  # q1과 q2가 0일때 나눗셈을 진행할 경우 오류를 막기 위함
 
     # ???
-    q1 = [0 for _ in range(256)]
-    q1.append(p[0])
-    for i in range(0, 255):
-        q1[i + 1] = q1[i] + p[i + 1]
+    q1 = np.zeros((256,))
+    q1[0] = p[0]
+    for k in range(0, 255):
+        q1[k + 1] = q1[k] + p[k + 1]
 
-    m1 = [0 for _ in range(256)]
-    for i in range(0, 255):
-        m1[i + 1] = (q1[i] * m1[i] + (i + 1) * p[i + 1]) / q1[i + 1]
+    m1 = np.zeros((256,))
+    m1[0] = 0
+    for k in range(0, 255):
+        m1[k + 1] = (q1[k] * m1[k] + (k + 1) * p[k + 1]) / q1[k + 1]
 
-    m2 = [0 for _ in range(256)]
+    m2 = np.zeros((256,))
+    temp = 0
     for i in range(1, 256):
-        m2[0] += p[i] * i
+        temp += i * p[i]
+    m2[0] = temp / (1 - q1[0])
 
-    m2[0] = m2[0] / (1 - q1[0])
+    for k in range(0, 255):
+        m2[k + 1] = ((1 - q1[k]) * m2[k] - (k + 1) * p[k + 1]) / (1 - q1[k + 1])
 
-    for i in range(0, 255):
-        m2[i + 1] = ((1 - q1[i]) * m2[i] - (i + 1) * p[i + 1]) / (1 - q1[i + 1])
+    sigma = np.zeros((256,))
+    for k in range(0, 256):
+        sigma[k] = q1[k] * (1 - q1[k]) * ((m1[k] - m2[k]) ** 2)
 
-    sigma = [0 for _ in range(256)]
-    for i in range(0, 256):
-        sigma[i] = q1[i] * (1 - q1[i]) * ((m1[i] - m2[i]) ** 2)
-
-    k = np.argmin(sigma)
+    k = np.argmax(sigma)
 
     return k
 
