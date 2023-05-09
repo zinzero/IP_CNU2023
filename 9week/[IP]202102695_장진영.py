@@ -23,15 +23,13 @@ def get_threshold_by_within_variance(intensity, p):
     q1 = np.zeros((256,))
     q2 = np.zeros((256,))
     for k in range(0, 256):
-        for j in range(0, k + 1):
-            q1[k] += p[j]
-        for i in range(k + 1, 256):
-            q2[k] += p[i]
+        for i in range(0, k + 1):
+            q1[k] += p[i]
+        q2[k] = 1 - q1[k]
 
     # k 까지의 평균
     m1 = np.zeros((256,))
     m2 = np.zeros((256,))
-
     for k in range(0, 256):
         for i in range(0, k + 1):
             m1[k] += intensity[i] * p[i]
@@ -39,6 +37,7 @@ def get_threshold_by_within_variance(intensity, p):
             m1[k] = 0
         else:
             m1[k] = m1[k] / q1[k]
+
         for j in range(k + 1, 256):
             m2[k] += intensity[j] * p[j]
         if q2[k] == 0:
@@ -52,24 +51,23 @@ def get_threshold_by_within_variance(intensity, p):
 
     for k in range(0, 256):
         for i in range(0, k + 1):
-            sigma1[k] += intensity[i] ** 2 * p[i] - m1[k] ** 2
+            sigma1[k] += ((intensity[i] - m1[k]) ** 2) * p[i]
         if q1[k] == 0:
             sigma1[k] = 0
         else:
             sigma1[k] = sigma1[k] / q1[k]
         for j in range(k + 1, 256):
-            sigma2[k] += intensity[i] ** 2 * p[i] - m2[k] ** 2
+            sigma2[k] += ((intensity[j] - m2[k]) ** 2) * p[j]
         if q2[k] == 0:
             sigma2[k] = 0
         else:
             sigma2[k] = sigma2[k] / q2[k]
 
-
     sigma = np.zeros((256,))
     for k in range(0, 256):
         sigma[k] = q1[k] * sigma1[k] + q2[k] * sigma2[k]
 
-    k = np.argmin(sigma).astype(np.int32)
+    k = np.argmin(sigma)
 
     return k
 
@@ -219,8 +217,6 @@ def otsu_method(src, mask):
 
     # k1과 k2가 같아야 한다.
     # 같지 않으면 실행 종료
-    print("k1 : ", k1)
-    print("k2 : ", k2)
     assert k1 == k2
 
     dst1 = threshold(src, k1, mask)
@@ -235,8 +231,8 @@ def otsu_method(src, mask):
     plt.plot(intensity, hist)
     # plt.plot(???, ???, color='red', marker='o', markersize=6)
     # plt.plot(???, ???, color='red', marker='o', markersize=6)
-    plt.plot(np.argmax(hist[:k1]), hist[np.argmax(hist[:k1])], color='red', marker='o', markersize=6)
-    plt.plot(np.argmax(hist[k1 + 1:]), hist[np.argmax(hist[k1 + 1:])], color='red', marker='o', markersize=6)
+    plt.plot(np.argmax(hist[:k1 + 1]), hist[np.argmax(hist[:k1 + 1])], color='red', marker='o', markersize=6)
+    plt.plot(k1 + np.argmax(hist[k1 + 1:]), hist[k1 + np.argmax(hist[k1 + 1:])], color='red', marker='o', markersize=6)
     plt.xlabel('Pixel value')
     plt.ylabel('Frequency')
     plt.title('Interest region histogram')
