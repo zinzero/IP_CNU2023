@@ -46,7 +46,8 @@ def calcMagnitude(Ix, Iy):
     ###########################################
     # Ix와 Iy의 magnitude를 계산
     # magnitude = None
-    magnitude = np.sqrt(Ix ** 2 + Iy ** 2)
+    magnitude = np.sqrt((Ix ** 2) + (Iy ** 2))
+    print("mag : ", magnitude)
     return magnitude
 
 def calcAngle(Ix, Iy):
@@ -56,7 +57,8 @@ def calcAngle(Ix, Iy):
     # angle     : ix와 iy의 angle         #
     #######################################
     # angle = None
-    angle = np.arctan(Iy, Ix)
+    angle = np.arctan(Iy / Ix)
+    print("angle : ", angle)
     return angle
 
 def pixel_bilinear_coordinate(src, pixel_coordinate):
@@ -75,24 +77,21 @@ def pixel_bilinear_coordinate(src, pixel_coordinate):
     # y_down = None
     # x_left = None
     # x_right = None
-
-    y_up = int(pixel_coordinate[0])
-    y_down = int(pixel_coordinate[0]) + 1
-    x_left = int(pixel_coordinate[1])
-    x_right = int(pixel_coordinate[1]) + 1
+    y_up = int(pixel_coordinate[1])
+    y_down = min(int(pixel_coordinate[1] + 1), h - 1)
+    x_left = int(pixel_coordinate[0])
+    x_right = min(int(pixel_coordinate[0] + 1), w - 1)
 
     # x 비율, y 비율을 계산하는 코드
     # 저번 실습 자료 참고.
     # t = None
     # s = None
-
-    t = pixel_coordinate[0] - y_up
-    s = pixel_coordinate[1] - x_left
+    t = pixel_coordinate[1] - y_up
+    s = pixel_coordinate[0] - x_left
 
     # Bilinear Interpolation 구현 부분
     # 저번 실습 자료 참고.
     # intensity = None
-
     intensity = ((1 - s) * (1 - t) * src[y_up, x_left]) \
                 + (s * (1 - t) * src[y_up, x_right]) \
                 + ((1 - s) * t * src[y_down, x_left]) \
@@ -164,21 +163,65 @@ def non_maximum_supression_five_size(magnitude, angle, step = 0.5):
     (h, w) = magnitude.shape
     # angle의 범위 : -90 ~ 90
     largest_magnitude = np.zeros((h, w))
-    for row in range(2, h-2):
-        for col in range(2, w-2):
+    # for row in range(2, h-2):
+    #     for col in range(2, w-2):
+    #         degree = angle[row, col]
+    #         # gradient의 degree는 edge와 수직방향이다.
+    #         if 0 <= degree and degree < 45:
+    #
+    #
+    #         elif 45 <= degree and degree <= 90:
+    #
+    #
+    #         elif -45 <= degree and degree < 0:
+    #
+    #
+    #         elif -90 <= degree and degree < -45:
+    #
+    #
+    #         else:
+    #             print(row, col, 'error!  degree :', degree)
+
+    for row in range(1, h - 1):
+        for col in range(1, w - 1):
             degree = angle[row, col]
+
             # gradient의 degree는 edge와 수직방향이다.
             if 0 <= degree and degree < 45:
-
+                rate = np.tan(np.deg2rad(degree))
+                left_pixel_coordinate = (row + rate, col + 1)
+                right_pixel_coordinate = (row - rate, col - 1)
+                left_magnitude = pixel_bilinear_coordinate(magnitude, left_pixel_coordinate)
+                right_magnitude = pixel_bilinear_coordinate(magnitude, right_pixel_coordinate)
+                if magnitude[row, col] == max(left_magnitude, magnitude[row, col], right_magnitude):
+                    largest_magnitude[row, col] = magnitude[row, col]
 
             elif 45 <= degree and degree <= 90:
-
+                rate = np.tan(np.deg2rad(90 - degree))  # cotan = 1/tan
+                up_pixel_coordinate = (row + 1, col + rate)
+                down_pixel_coordinate = (row - 1, col - rate)
+                up_magnitude = pixel_bilinear_coordinate(magnitude, up_pixel_coordinate)
+                down_magnitude = pixel_bilinear_coordinate(magnitude, down_pixel_coordinate)
+                if magnitude[row, col] == max(up_magnitude, magnitude[row, col], down_magnitude):
+                    largest_magnitude[row, col] = magnitude[row, col]
 
             elif -45 <= degree and degree < 0:
-
+                rate = -np.tan(np.deg2rad(degree))
+                left_pixel_coordinate = (row - rate, col + 1)
+                right_pixel_coordinate = (row + rate, col - 1)
+                left_magnitude = pixel_bilinear_coordinate(magnitude, left_pixel_coordinate)
+                right_magnitude = pixel_bilinear_coordinate(magnitude, right_pixel_coordinate)
+                if magnitude[row, col] == max(left_magnitude, magnitude[row, col], right_magnitude):
+                    largest_magnitude[row, col] = magnitude[row, col]
 
             elif -90 <= degree and degree < -45:
-
+                rate = -np.tan(np.deg2rad(90 - degree))
+                up_pixel_coordinate = (row - 1, col + rate)
+                down_pixel_coordinate = (row + 1, col - rate)
+                up_magnitude = pixel_bilinear_coordinate(magnitude, up_pixel_coordinate)
+                down_magnitude = pixel_bilinear_coordinate(magnitude, down_pixel_coordinate)
+                if magnitude[row, col] == max(up_magnitude, magnitude[row, col], down_magnitude):
+                    largest_magnitude[row, col] = magnitude[row, col]
 
             else:
                 print(row, col, 'error!  degree :', degree)
@@ -227,7 +270,7 @@ def double_thresholding(src, high_threshold):
                 weak_edge = []
                 weak_edge.append((row, col))
                 search_weak_edge(dst, weak_edge, high_threshold_value, low_threshold_value)
-                if calssify_edge(dst, weak_edge, high_threshold_value):
+                if classify_edge(dst, weak_edge, high_threshold_value):
                     for idx in range(len(weak_edge)):
                         (r, c) = weak_edge[idx]
                         dst[r, c] = 255
@@ -238,24 +281,87 @@ def double_thresholding(src, high_threshold):
 
     return dst
 
-def search_weak_edge(dst, edges, high_threshold_value, low_threshold_value):
-    ####################################################################################
-    # TODO
-    # TODO search_weak_edge 함수
-    # TODO Goal : 연결된 Weak Edge를 찾아서 저장하는 함수
-    # TODO 구현의 자유도를 주기위해 실습을 참고하여 구현해도 되며
-    # TODO 직접 생각해서 구현해도 무방함.
-    ####################################################################################
-    return None
+# 재귀로 만들기
+def search_weak_edge(dst, edges, high_threshold_value, low_threshold_value, row, col):
 
-def calssify_edge(dst, weak_edge, high_threshold_value):
-    ####################################################################################
-    # TODO
-    # TODO weak edge가 strong edge랑 연결되어 있는지 확인한 후 edge임을 결정하는 함수
-    # TODO 구현의 자유도를 주기위해 실습을 참고하여 구현해도 되며
-    # TODO 직접 생각해서 구현해도 무방함.
-    ####################################################################################
-    return None
+    if ((row, col) in edges) or dst[row, col] < low_threshold_value or dst[row, col] > high_threshold_value:
+        return edges
+
+    edges.append((row, col))
+    h, w = dst.shape
+
+    # 1번 좌표
+    if row > 0 and col > 0:
+        edges = search_weak_edge(dst, edges, high_threshold_value, low_threshold_value, row - 1, col - 1)
+    # 2번 좌표
+    if row > 0:
+        edges = search_weak_edge(dst, edges, high_threshold_value, low_threshold_value, row - 1, col)
+    # 3번 좌표
+    if row > 0 and col < w - 1:
+        edges = search_weak_edge(dst, edges, high_threshold_value, low_threshold_value, row - 1, col + 1)
+    # 4번 좌표
+    if col > 0:
+        edges = search_weak_edge(dst, edges, high_threshold_value, low_threshold_value, row, col - 1)
+    # 6번 좌표
+    if col < w - 1:
+        edges = search_weak_edge(dst, edges, high_threshold_value, low_threshold_value, row, col + 1)
+    # 7번 좌표
+    if row < h - 1 and col > 0:
+        edges = search_weak_edge(dst, edges, high_threshold_value, low_threshold_value, row + 1, col - 1)
+    # 8번 좌표
+    if row < h - 1:
+        edges = search_weak_edge(dst, edges, high_threshold_value, low_threshold_value, row + 1, col)
+    # 9번 좌표
+    if row < h - 1 and col < w - 1:
+        edges = search_weak_edge(dst, edges, high_threshold_value, low_threshold_value, row + 1, col + 1)
+
+    return list(set(edges))
+
+def classify_edge(dst, weak_edge, high_threshold_value):
+
+    (h, w) = dst.shape
+    copy_img = dst.copy()
+    low_threshold_value = high_threshold_value * 0.4
+    connec = False
+    for row in range(h):
+        for col in range(w):
+            weak_edge = search_weak_edge(dst, [], high_threshold_value, low_threshold_value, row, col)
+
+
+    return
+
+# def search_weak_edge(dst, edges, high_threshold_value, low_threshold_value):
+#     ####################################################################################
+#     # TODO
+#     # TODO search_weak_edge 함수
+#     # TODO Goal : 연결된 Weak Edge를 찾아서 저장하는 함수
+#     # TODO 구현의 자유도를 주기위해 실습을 참고하여 구현해도 되며
+#     # TODO 직접 생각해서 구현해도 무방함.
+#     ####################################################################################
+#     # return None
+#
+#     (h, w) = dst.shape
+#
+#     for row in range(h):
+#         for col in range(w):
+#             if low_threshold_value <= dst[row, col] <= high_threshold_value:
+#                 edges.append((row, col))
+#
+#             else:
+#                 continue
+#
+#     return edges
+
+# def classify_edge(dst, weak_edge, high_threshold_value):
+#     ####################################################################################
+#     # TODO
+#     # TODO weak edge가 strong edge랑 연결되어 있는지 확인한 후 edge임을 결정하는 함수
+#     # TODO 구현의 자유도를 주기위해 실습을 참고하여 구현해도 되며
+#     # TODO 직접 생각해서 구현해도 무방함.
+#     # strong edge 는 Th 보다 큰 것
+#     # weak_edge = search_weak_edge 의 반환 값
+#     ####################################################################################
+#     return None
 
 def my_canny_edge_detection(src, fsize=3, sigma=1):
 
