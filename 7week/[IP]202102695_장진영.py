@@ -47,7 +47,6 @@ def calcMagnitude(Ix, Iy):
     # Ix와 Iy의 magnitude를 계산
     # magnitude = None
     magnitude = np.sqrt((Ix ** 2) + (Iy ** 2))
-    print("mag : ", magnitude)
     return magnitude
 
 def calcAngle(Ix, Iy):
@@ -60,17 +59,17 @@ def calcAngle(Ix, Iy):
     (h, w) = Ix.shape
     angle = np.zeros((h, w))
 
-    for i in range(h):
-        for j in range(w):
-            if Ix[i, j] == 0:
-                if Iy[i, j] < 0:
-                    angle[i, j] = -90
-                elif Iy[i, j] > 0:
-                    angle[i, j] = 90
-                else:
-                    angle[i, j] = 0
+    for row in range(h):
+        for col in range(w):
+            if Ix[row, col] == 0:   # Ix의 row, col 값이 0이면서
+                if Iy[row, col] < 0:
+                    angle[row, col] = -90   # Iy가 0보다 작으면
+                elif Iy[row, col] > 0:  # 크면
+                    angle[row, col] = 90
+                else:   # 0인 경우
+                    angle[row, col] = 0
             else:
-                angle[i, j] = np.rad2deg(np.arctan(Iy[i, j] / Ix[i, j]))
+                angle[row, col] = np.rad2deg(np.arctan(Iy[row, col] / Ix[row, col]))    # arctan로 구하고 라디안 값을 degree로 변환
 
     return angle
 
@@ -90,9 +89,9 @@ def pixel_bilinear_coordinate(src, pixel_coordinate):
     # y_down = None
     # x_left = None
     # x_right = None
-    y_up = int(pixel_coordinate[0])
-    y_down = min(int(pixel_coordinate[0] + 1), h - 1)
-    x_left = int(pixel_coordinate[1])
+    y_up = int(pixel_coordinate[0])     # pixel_coordinate에 (row, col) 값이 저장 되어 있으므로 y가 0 x가 1
+    y_down = min(int(pixel_coordinate[0] + 1), h - 1)   # 주변 픽셀이 범위를 벗어나는지 판별
+    x_left = int(pixel_coordinate[1])   # float값을 int로 변환하면서 값을 버림
     x_right = min(int(pixel_coordinate[1] + 1), w - 1)
 
     # x 비율, y 비율을 계산하는 코드
@@ -105,10 +104,8 @@ def pixel_bilinear_coordinate(src, pixel_coordinate):
     # Bilinear Interpolation 구현 부분
     # 저번 실습 자료 참고.
     # intensity = None
-    intensity = ((1 - s) * (1 - t) * src[y_up, x_left]) \
-                + (s * (1 - t) * src[y_up, x_right]) \
-                + ((1 - s) * t * src[y_down, x_left]) \
-                + (s * t * src[y_down, x_right])
+    intensity = ((1 - s) * (1 - t) * src[y_up, x_left]) + (s * (1 - t) * src[y_up, x_right]) \
+                + ((1 - s) * t * src[y_down, x_left]) + (s * t * src[y_down, x_right])
 
     return intensity
 
@@ -183,16 +180,16 @@ def non_maximum_supression_five_size(magnitude, angle, step=0.5):
 
             # gradient의 degree는 edge와 수직방향이다.
             if 0 <= degree < 45:
-                for i in np.arange(-2, 2.5, step):
-                    if i == 0:
+                for i in np.arange(-2, 2.5, step):  # -2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0 까지
+                    if i == 0:  # 0이면 통과
                         continue
                     else:
-                        rate = np.tan(np.deg2rad(degree)) * i
+                        rate = np.tan(np.deg2rad(degree)) * i   # i 만큼 곱해서 rate 측정
                         pixel_coordinate = (row + rate, col + i)
                         pixel_magnitude = pixel_bilinear_coordinate(magnitude, pixel_coordinate)
                         if magnitude[row, col] == max(pixel_magnitude, magnitude[row, col]):
                             largest_magnitude[row, col] = magnitude[row, col]
-                        else:
+                        else:   # i 가 돌면서 맞지 않는 경우를 만나면 largest_magnitude edge가 아니므로 반복문을 종료
                             largest_magnitude[row, col] = 0
                             break
 
@@ -374,7 +371,7 @@ def classify_edge(dst, weak_edge, high_threshold_value):
 
     return connected
 
-def my_canny_edge_detection(src, fsize=3, sigma=1):
+def my_canny_edge_detection(src):
 
     # low-pass filter를 이용하여 blur효과
     # high-pass filter를 이용하여 edge 검출
@@ -397,8 +394,8 @@ def my_canny_edge_detection(src, fsize=3, sigma=1):
     cv2.imshow('NMS_Five', convert_uint8(larger_magnitude3))
 
     #double thresholding 수행
-    dst = double_thresholding(larger_magnitude2,40)
-    dst2 = double_thresholding(larger_magnitude3,29)
+    dst = double_thresholding(larger_magnitude2, 40)
+    dst2 = double_thresholding(larger_magnitude3, 29)
     return dst, dst2
 
 def main():
