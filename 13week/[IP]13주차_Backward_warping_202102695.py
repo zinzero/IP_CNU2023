@@ -20,6 +20,49 @@ def get_roi_coordinates(src):
     h, w = src.shape
 
     coordinates_list = []
+    #상
+    for row in range(h):
+        for col in range(w):
+            if src[row, col] == 0:
+                continue
+            else:
+                coordinates_list.append((col, row))
+                break
+        if (row, col) in coordinates_list:
+            break
+
+    # 우
+    for col in range(w - 1, 0, -1):
+        for row in range(h):
+            if src[row, col] == 0:
+                continue
+            else:
+                coordinates_list.append((col, row))
+                break
+        if (row, col) in coordinates_list:
+            break
+
+    # 하
+    for row in range(h - 1, 0, -1):
+        for col in range(w - 1, 0, -1):
+            if src[row, col] == 0:
+                continue
+            else:
+                coordinates_list.append((col, row))
+                break
+        if (row, col) in coordinates_list:
+            break
+
+    # 좌
+    for col in range(w):
+        for row in range(h - 1, 0, -1):
+            if src[row, col] == 0:
+                continue
+            else:
+                coordinates_list.append((col, row))
+                break
+        if (row, col) in coordinates_list:
+            break
 
     # 4개의 좌표값을 도출해야 함.
 
@@ -43,15 +86,31 @@ def get_max_min_coordinates(roi_coordinates, M):
 
     # dst shape 구하기
     cor_transform = []
+
+    for fair in roi_coordinates:
+        P = np.array([
+            [fair[0]],
+            [fair[1]],
+            [1]
+        ])
+        mp = np.dot(M, P)
+        cor_transform.append((mp[0, 0], mp[1, 0]))
+
     # Original에서 M에 의해 변환된 좌표의 최대 최소 범위 파악
 
     cor_transform = np.array(cor_transform)
 
     # 추출한 좌표들을 기반으로 행의 최소, 최대값 열의 최소 최댓값을 추출
-    row_max = ???
-    row_min = ???
-    col_max = ???
-    col_min = ???
+    # row_max = ???
+    # row_min = ???
+    # col_max = ???
+    # col_min = ???
+    row_max = int(np.ceil(np.max(cor_transform[:, 1])))
+    row_min = int(np.floor(np.min(cor_transform[:, 1])))
+    col_max = int(np.ceil(np.max(cor_transform[:, 0])))
+    col_min = int(np.floor(np.min(cor_transform[:, 0])))
+
+
 
     return row_max, row_min, col_max, col_min
 
@@ -97,8 +156,11 @@ def backward(src, M):
     # TODO 2.2 결과 이미지의 크기 구하기
     ############################################
 
-    h_ = ???
-    w_ = ???
+    # h_ = ???
+    # w_ = ???
+    h_ = row_max - row_min
+    w_ = col_max - col_min
+
     dst = np.zeros((h_, w_))
 
     for row in range(h_):
@@ -114,14 +176,21 @@ def backward(src, M):
             # TODO  src_row: 역변환(M의 inverse)에 의한 y좌표
             ##################################################################
 
-            P_dst = ???
+            # P_dst = ???
+            P_dst = np.array([
+                [col + col_min],
+                [row + row_min],
+                [1]
+            ])
 
             # original 좌표로 매핑
             P = np.dot(M_inv, P_dst)
-            src_col = ???
-            src_row = ???
-            # bilinear interpolation
+            # src_col = ???
+            # src_row = ???
+            src_col = P[0, 0]
+            src_row = P[1, 0]
 
+            # bilinear interpolation
             src_col_right = int(np.ceil(src_col))
             src_col_left = int(src_col)
 
@@ -138,37 +207,59 @@ def backward(src, M):
             # TODO Bilinear interpolation 완성
             ##################################################################
 
-            intensity = ???
+            # intensity = ???
+            s = src_col - src_col_left
+            t = src_row - src_row_top
+
+            intensity = (1 - s) * (1 - t) * src[src_row_top, src_col_left] \
+                        + s * (1 - t) * src[src_row_top, src_col_right] \
+                        + (1 - s) * t * src[src_row_bottom, src_col_left] \
+                        + s * t * src[src_row_bottom, src_col_right]
 
             dst[row, col] = intensity
 
     dst = dst.astype(np.uint8)
 
     print('dst shape : {}'.format(dst.shape))
-    print('dst min : {} dst max : {}'.format(np.min(dst),np.max(dst)))
+    print('dst min : {} dst max : {}'.format(np.min(dst), np.max(dst)))
 
     return dst
 
 def generate_rotation(degree):
-    M_ro = ???
+    # M_ro = ???
+    M_ro = np.array([
+        [np.cos(np.deg2rad(degree)), -np.sin(np.deg2rad(degree)), 0],
+        [np.sin(np.deg2rad(degree)), np.cos(np.deg2rad(degree)), 0],
+        [0, 0, 1]
+    ])
     return M_ro
 
 def generate_scaling(x_scaling, y_scaling):
-    M_sc = ???
+    # M_sc = ???
+    M_sc = np.array([
+        [x_scaling, 0, 0],
+        [0, y_scaling, 0],
+        [0, 0, 1]
+    ])
     return M_sc
 
 def generate_shearing(x, y):
-    M_sh = ???
+    # M_sh = ???
+    M_sh = np.array([
+        [1, x, 0],
+        [y, 1, 0],
+        [0, 0, 1]
+    ])
     return M_sh
 
 def display_image(image_list):
-    template = np.zeros((850,800))
+    template = np.zeros((850, 800))
     template = cv2.line(template, (0, 25), (800, 25), (0.5, 0.5, 0.5))
     template = cv2.line(template, (0, 425), (800, 425), (0.5, 0.5, 0.5))
     template = cv2.line(template, (0, 450), (800, 450), (0.5, 0.5, 0.5))
     template = cv2.line(template, (400, 0), (400, 850), (0.5, 0.5, 0.5))
 
-    template = cv2.putText(template, 'step 1 rotation', (100, 18), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (255,0,0), 1,
+    template = cv2.putText(template, 'step 1 rotation', (100, 18), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (255, 0, 0), 1,
                            cv2.LINE_4)
     template = cv2.putText(template, 'step 2 shear', (525, 18), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (255, 0, 0), 1,
                            cv2.LINE_4)
@@ -187,7 +278,7 @@ def display_image(image_list):
     first_image_shape = first_image.shape
     coord_1 = (400 - first_image_shape[0]) // 2
     coord_2 = (400 - first_image_shape[1]) // 2
-    template[25 + coord_1 : 25 + first_image_shape[0] + coord_1,  coord_2 : first_image_shape[1] + coord_2] = first_image
+    template[25 + coord_1: 25 + first_image_shape[0] + coord_1,  coord_2: first_image_shape[1] + coord_2] = first_image
 
     if len(image_list) == 2:
         second_image = image_list[1] / 255
@@ -276,7 +367,7 @@ def main():
     display_image([dst_back1])
 
     dst_back2 = backward(dst_back1, M_sh)
-    display_image([dst_back1,dst_back2])
+    display_image([dst_back1, dst_back2])
 
     dst_back3 = backward(dst_back2, M_sc)
     display_image([dst_back1, dst_back2, dst_back3])
