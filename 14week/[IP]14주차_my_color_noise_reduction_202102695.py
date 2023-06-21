@@ -80,10 +80,23 @@ def my_median_filtering(src, msize):
             # TODO 이전 실습 코드 참고
             #########################################################
 
-            mask = ???
-            dst[row, col] = ???
+            # mask = ???
+            r_start = np.clip(row - (msize // 2), 0, h)
+            r_end = np.clip(row + (msize // 2), 0, h)
 
-    return dst.astype(np.uint8)
+            c_start = np.clip(col - (msize // 2), 0, w)
+            c_end = np.clip(col + (msize // 2), 0, w)
+            mask = src[r_start:r_end, c_start:c_end]
+
+            # dst[row, col] = ???
+            D1_msak = np.array(mask).flatten()
+            D1_msak = np.sort(D1_msak)
+
+            mid = len(D1_msak) // 2
+
+            dst[row, col] = D1_msak[mid]
+
+    return dst
 
 
 if __name__ == '__main__':
@@ -105,9 +118,26 @@ if __name__ == '__main__':
 
     gaus2D = my_get_Gaussian2D_mask(msize=3, sigma=5)
 
-    rgb_gaussian_dst = ???
+    # rgb_gaussian_dst = ???
+    B = src_noise[:, :, 0]
+    G = src_noise[:, :, 1]
+    R = src_noise[:, :, 2]
 
-    rgb_median_dst = ???
+    gauss_B = my_filtering(B, gaus2D)
+    gauss_G = my_filtering(G, gaus2D)
+    gauss_R = my_filtering(R, gaus2D)
+
+    rgb_gaussian_dst = np.dstack((gauss_B, gauss_G, gauss_R))
+    rgb_gaussian_dst = my_normalize(rgb_gaussian_dst)
+
+    # rgb_median_dst = ???
+
+    median_B = my_median_filtering(B, 3)
+    median_G = my_median_filtering(G, 3)
+    median_R = my_median_filtering(R, 3)
+
+    rgb_median_dst = np.dstack((median_B, median_G, median_R))
+    rgb_median_dst = my_normalize(rgb_median_dst)
 
     ######################################################
     # TODO
@@ -120,11 +150,23 @@ if __name__ == '__main__':
 
     gaus2D = my_get_Gaussian2D_mask(msize=3,  sigma=5)
     yuv_noise = cv2.cvtColor(noise_image, cv2.COLOR_BGR2YUV)
-    yuv_gaussian_dst = yuv_noise / 255
+    yuv_noise = yuv_noise / 255
 
-    yuv_gaussian_dst = ???
+    # yuv_gaussian_dst = ???
+    Y = yuv_noise[:, :, 0]
+    U = yuv_noise[:, :, 1]
+    V = yuv_noise[:, :, 2]
 
-    yuv_median_dst = ???
+    filter_Y = my_filtering(Y, gaus2D)
+
+    yuv_gaussian_dst = np.dstack((filter_Y, U, V))
+    yuv_gaussian_dst = my_normalize(yuv_gaussian_dst)
+
+    # yuv_median_dst = ???
+    median_Y = my_median_filtering(Y, 3)
+
+    yuv_median_dst = np.dstack((median_Y, U, V))
+    yuv_median_dst = my_normalize(yuv_median_dst)
 
     cv2.imshow('original', src)
     cv2.imshow('noise image', noise_image)

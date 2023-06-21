@@ -28,7 +28,7 @@ def get_roi_coordinates(src):
             else:
                 coordinates_list.append((col, row))
                 break
-        if (row, col) in coordinates_list:
+        if (col, row) in coordinates_list:
             break
 
     # 우
@@ -39,7 +39,7 @@ def get_roi_coordinates(src):
             else:
                 coordinates_list.append((col, row))
                 break
-        if (row, col) in coordinates_list:
+        if (col, row) in coordinates_list:
             break
 
     # 하
@@ -50,7 +50,7 @@ def get_roi_coordinates(src):
             else:
                 coordinates_list.append((col, row))
                 break
-        if (row, col) in coordinates_list:
+        if (col, row) in coordinates_list:
             break
 
     # 좌
@@ -61,7 +61,7 @@ def get_roi_coordinates(src):
             else:
                 coordinates_list.append((col, row))
                 break
-        if (row, col) in coordinates_list:
+        if (col, row) in coordinates_list:
             break
 
     # 4개의 좌표값을 도출해야 함.
